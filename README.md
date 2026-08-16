@@ -28,10 +28,11 @@ Spring MVC와 Thymeleaf로 상품 등록·조회·수정 및 PRG(Post/Redirect/G
 
 ## 보안 및 의존성 점검
 
-CycloneDX SBOM은 다음 명령으로 생성할 수 있습니다.
+SpotBugs와 FindSecBugs 정적 분석 및 CycloneDX SBOM은 다음 명령으로 실행할 수 있습니다.
 
 ```powershell
+.\gradlew.bat spotbugsMain spotbugsTest
 .\gradlew.bat cyclonedxBom
 ```
 
-결과는 `build/reports/cyclonedx/`에 생성됩니다.
+결과는 각각 `build/reports/spotbugs/`와 `build/reports/cyclonedx/`에 생성됩니다.
