@@ -6,14 +6,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Repository
 public class ItemRepository {
-    private static final Map<Long, Item> store = new ConcurrentHashMap<>(); // static
-    private static long sequence = 0L; // static
+    private final Map<Long, Item> store = new ConcurrentHashMap<>();
+    private final AtomicLong sequence = new AtomicLong();
 
     public Item save(Item item) {
-        item.setId(++sequence);
+        item.setId(sequence.incrementAndGet());
         store.put(item.getId(), item);
         return item;
     }
@@ -28,6 +29,9 @@ public class ItemRepository {
 
     public void update(Long itemId, Item updateParam) {
         Item findItem = findById(itemId);
+        if (findItem == null) {
+            throw new IllegalArgumentException("Item not found: " + itemId);
+        }
         findItem.setItemName(updateParam.getItemName());
         findItem.setPrice(updateParam.getPrice());
         findItem.setQuantity(updateParam.getQuantity());
@@ -35,5 +39,6 @@ public class ItemRepository {
 
     public void clearStore() {
         store.clear();
+        sequence.set(0L);
     }
 }

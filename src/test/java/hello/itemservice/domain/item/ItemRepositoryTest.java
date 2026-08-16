@@ -6,8 +6,9 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class ItemRepositoryText {
+class ItemRepositoryTest {
     ItemRepository itemRepository = new ItemRepository();
 
     @AfterEach
@@ -61,5 +62,24 @@ public class ItemRepositoryText {
         assertThat(findItem.getItemName()).isEqualTo(updateParam.getItemName());
         assertThat(findItem.getPrice()).isEqualTo(updateParam.getPrice());
         assertThat(findItem.getQuantity()).isEqualTo(updateParam.getQuantity());
+    }
+
+    @Test
+    void clearStoreResetsSequence() {
+        itemRepository.save(new Item("item1", 10000, 10));
+
+        itemRepository.clearStore();
+        Item savedItem = itemRepository.save(new Item("item2", 20000, 20));
+
+        assertThat(savedItem.getId()).isEqualTo(1L);
+    }
+
+    @Test
+    void updateMissingItemFails() {
+        Item updateParam = new Item("item", 10000, 10);
+
+        assertThatThrownBy(() -> itemRepository.update(999L, updateParam))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("999");
     }
 }
