@@ -3,12 +3,15 @@ package hello.itemservice.web.basic;
 import hello.itemservice.domain.item.Item;
 import hello.itemservice.domain.item.ItemRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.util.List;
 
 @Controller
@@ -27,7 +30,7 @@ public class BasicItemController {
 
     @GetMapping("/{itemId}")
     public String item(@PathVariable long itemId, Model model) {
-        Item item = itemRepository.findById(itemId);
+        Item item = getItem(itemId);
         model.addAttribute("item", item);
         return "basic/item";
     }
@@ -79,6 +82,7 @@ public class BasicItemController {
     @PostMapping("/add")
     public String addItemV6(Item item, RedirectAttributes redirectAttributes) {
         // PRG Post/Redirect/Get
+        validateItem(item);
         Item savedItem = itemRepository.save(item);
         redirectAttributes.addAttribute("itemId", savedItem.getId());
         redirectAttributes.addAttribute("status", true);
@@ -87,15 +91,33 @@ public class BasicItemController {
 
     @GetMapping("/{itemId}/edit")
     public String editForm(@PathVariable Long itemId, Model model) {
-        Item item = itemRepository.findById(itemId);
+        Item item = getItem(itemId);
         model.addAttribute("item", item);
         return "basic/editForm";
     }
 
     @PostMapping("/{itemId}/edit")
     public String edit(@PathVariable Long itemId, @ModelAttribute Item item) {
+        getItem(itemId);
+        validateItem(item);
         itemRepository.update(itemId, item);
         return "redirect:/basic/items/{itemId}";
+    }
+
+    private Item getItem(Long itemId) {
+        Item item = itemRepository.findById(itemId);
+        if (item == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Item not found");
+        }
+        return item;
+    }
+
+    private void validateItem(Item item) {
+        if (!StringUtils.hasText(item.getItemName())
+                || item.getPrice() == null || item.getPrice() < 0
+                || item.getQuantity() == null || item.getQuantity() < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid item data");
+        }
     }
 
     /***
